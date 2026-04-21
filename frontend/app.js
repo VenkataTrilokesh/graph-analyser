@@ -924,7 +924,7 @@ async function runAnalysis() {
       formData.append('file2', file2);
     }
 
-    const response = await fetch('http://localhost:5000/analyze', {
+    const response = await fetch('https://graph-analyser.onrender.com', {
       method: 'POST',
       body: formData
     });
