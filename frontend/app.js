@@ -875,11 +875,10 @@ async function runAnalysis() {
 
   try {
     // ---- READ FILE 1 ----
-    await delay(80);
     const text1 = await readFile(file1);
 
-    Progress.set('Parsing Graph A…', 20);
-    await delay(60);
+    Progress.set('Parsing Graph A…', 15);
+    await delay(30);
 
     const g1 = parseGraph(text1);
 
@@ -888,73 +887,52 @@ async function runAnalysis() {
     if (g1.n > maxN) {
       throw new KWLSizeError(
         `Graph A has ${g1.n} nodes, but k=${k} only supports up to ${maxN} nodes safely.\n` +
-        `With ${g1.n} nodes and k=${k}, the algorithm would need to process ${g1.n}^${k} = ${Math.pow(g1.n, k).toLocaleString()} tuples — this would crash your browser.\n\n` +
-        `Fix: reduce k to ${recommendK(g1.n)}, or use a smaller graph (≤ ${maxN} nodes for k=${k}).`
+        `Reduce k or use a smaller graph.`
       );
     }
 
     let g2 = null;
 
-    // ---- READ FILE 2 (IF COMPARE MODE) ----
+    // ---- READ FILE 2 ----
     if (state.mode === 'compare' && file2) {
       const text2 = await readFile(file2);
 
-      Progress.set('Parsing Graph B…', 35);
-      await delay(60);
+      Progress.set('Parsing Graph B…', 30);
+      await delay(30);
 
       g2 = parseGraph(text2);
 
       if (g2.n > maxN) {
         throw new KWLSizeError(
           `Graph B has ${g2.n} nodes, but k=${k} only supports up to ${maxN} nodes safely.\n` +
-          `Fix: reduce k to ${recommendK(g2.n)}, or use a smaller graph (≤ ${maxN} nodes for k=${k}).`
+          `Reduce k or use a smaller graph.`
         );
       }
     }
 
-    // ---- CALL BACKEND ----
-    Progress.set(`Running ${k}-WL on backend…`, 60);
-    await delay(80);
+    // ---- RUN WL CLIENT-SIDE (no backend needed) ----
+    Progress.set(`Running ${k}-WL…`, 50);
+    await delay(30); // yield to let the progress bar paint
 
-    const formData = new FormData();
-    formData.append('file1', file1);
-    formData.append('k', k);
+    let graphs, iterData, compareResult;
 
-    if (file2) {
-      formData.append('file2', file2);
-    }
-
-    const response = await fetch('https://graph-analyser.onrender.com', {
-      method: 'POST',
-      body: formData
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || data.error) {
-      throw new Error(data.error || 'Backend error occurred');
-    }
-
-    let iter1, iter2, compareResult;
-
-    // ---- PROCESS BACKEND RESULT ----
     if (g2) {
-      compareResult = data;
-      iter1 = data.iter1;
-      iter2 = data.iter2;
+      // Compare mode: share a hash map so colour IDs are consistent across both graphs
+      compareResult = compareGraphs(g1, g2, k);
+      graphs   = [g1, g2];
+      iterData = [compareResult.iter1, compareResult.iter2];
     } else {
-      iter1 = data.iterations;
+      const result = runWL(g1, k);
+      graphs   = [g1];
+      iterData = [result.iterations];
     }
 
     // ---- RENDER ----
     Progress.set('Building visualization…', 90);
-    await delay(60);
-
-    const graphs   = g2 ? [g1, g2] : [g1];
-    const iterData = g2 ? [iter1, iter2] : [iter1];
+    await delay(30);
 
     Progress.set('Complete!', 100);
-    await delay(400);
+    await delay(300);
     Progress.hide();
 
     renderResults(graphs, iterData, compareResult);
@@ -967,11 +945,7 @@ async function runAnalysis() {
     if (err instanceof KWLSizeError) {
       showKWLError(err.message);
     } else {
-      showError(
-        '⚠️ Failed to process graph: ' +
-        err.message +
-        '. Make sure backend is running on http://localhost:5000'
-      );
+      showError('⚠️ Failed to process graph: ' + err.message);
     }
 
     Audio.play('error');
@@ -984,6 +958,7 @@ async function runAnalysis() {
     }
   }
 }
+
 
 function setK(val) {
   val = Math.max(1, Math.min(5, val));
