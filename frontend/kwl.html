@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>k-WL Test — Graph Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div class="bg-canvas">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="page-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <circle cx="8"  cy="8"  r="4" fill="var(--accent-primary)" opacity="0.9"/>
+            <circle cx="20" cy="8"  r="4" fill="var(--accent-violet)"  opacity="0.9"/>
+            <circle cx="14" cy="20" r="4" fill="var(--accent-teal)"    opacity="0.9"/>
+            <line x1="8"  y1="8"  x2="20" y2="8"  stroke="var(--text-tertiary)" stroke-width="1.5"/>
+            <line x1="8"  y1="8"  x2="14" y2="20" stroke="var(--text-tertiary)" stroke-width="1.5"/>
+            <line x1="20" y1="8"  x2="14" y2="20" stroke="var(--text-tertiary)" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <span class="brand-tag">Weisfeiler–Lehman Engine</span>
+          <h1 class="brand-title">Graph<em>Analyzer</em></h1>
+        </div>
+      </div>
+      <nav class="topbar-nav">
+        <a href="index.html"       class="nav-link active">k-WL Test</a>
+        <a href="isomorphism.html" class="nav-link">Isomorphism</a>
+        <a href="explain.html"     class="nav-link">Explainer</a>
+        <div class="status-chip">
+          <span class="pulse-dot"></span>
+          Interactive
+        </div>
+      </nav>
+    </header>
+
+    <div class="static-page">
+
+      <div class="static-hero anim-slide-up">
+        <h2>The k-Weisfeiler–Lehman Test</h2>
+        <p>A hierarchy of increasingly powerful graph distinguishing algorithms. Each level k operates on ordered k-tuples of nodes, enabling finer structural discrimination than the classical 1-WL colour refinement.</p>
+      </div>
+
+      <div class="static-section anim-slide-up anim-d1">
+        <h3>What is k-WL?</h3>
+        <p>The Weisfeiler–Lehman (WL) graph isomorphism test is a classic algorithm that iteratively refines colour labels assigned to nodes (1-WL) or k-tuples of nodes (k-WL). Two graphs are considered <em>indistinguishable</em> by k-WL if their final colour histograms match.</p>
+        <p>The k-WL hierarchy is strictly ordered: k-WL can distinguish every pair of graphs that (k−1)-WL can, plus more. However, no finite k makes WL a complete isomorphism test — there always exist pairs of non-isomorphic graphs that fool k-WL for any fixed k.</p>
+      </div>
+
+      <div class="static-section anim-slide-up anim-d2">
+        <h3>Algorithm Steps</h3>
+        <div class="algo-steps">
+          <div class="algo-step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>Enumerate k-tuples</strong>
+              <p>Generate all ordered k-tuples of nodes: n<sup>k</sup> total. Each tuple represents a structural context within the graph.</p>
+            </div>
+          </div>
+          <div class="algo-step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>Assign initial colours</strong>
+              <p>Each tuple receives a colour encoding its internal adjacency pattern, equality pattern (repeated nodes), and degree sequence.</p>
+            </div>
+          </div>
+          <div class="algo-step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>Iterative refinement</strong>
+              <p>For each tuple, collect the multiset of colours of all tuples reachable by swapping one position to a neighbour. Hash (old colour, multiset) → new colour.</p>
+            </div>
+          </div>
+          <div class="algo-step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <strong>Convergence check</strong>
+              <p>Repeat until no colour changes occur. The stable colour histogram is the <em>k-WL certificate</em> of the graph.</p>
+            </div>
+          </div>
+          <div class="algo-step">
+            <div class="step-num">5</div>
+            <div class="step-body">
+              <strong>Compare certificates</strong>
+              <p>Two graphs are k-WL indistinguishable if and only if their certificates match. Matching certificates does <em>not</em> guarantee isomorphism — only a mismatch is conclusive.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="static-section anim-slide-up anim-d3">
+        <h3>Complexity &amp; Limits</h3>
+        <div class="complexity-grid">
+          <div class="complexity-box">
+            <div class="c-label">Tuple count</div>
+            <div class="c-val">n<sup style="font-size:13px">k</sup></div>
+          </div>
+          <div class="complexity-box">
+            <div class="c-label">Space</div>
+            <div class="c-val">O(n<sup style="font-size:13px">k</sup>)</div>
+          </div>
+          <div class="complexity-box">
+            <div class="c-label">Time per iter</div>
+            <div class="c-val">O(n<sup style="font-size:13px">k+1</sup>)</div>
+          </div>
+        </div>
+        <p style="margin-top:16px">This exponential growth is why the analyzer enforces safe node limits per k: k=2 allows up to 500 nodes (250,000 tuples), k=3 up to 100 (1,000,000 tuples), k=4 up to 30 (810,000 tuples), and k=5 up to 15 (759,375 tuples).</p>
+      </div>
+
+      <div class="static-section anim-slide-up anim-d4">
+        <h3>Safe Node Limits Reference</h3>
+        <table class="kwl-limits-table" style="margin-top:8px">
+          <thead><tr><th>k</th><th>Max nodes (safe)</th><th>Tuples at max</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><span class="k-badge">1</span></td><td>Unlimited</td><td>n</td><td style="font-size:12px;color:var(--text-muted)">Standard colour refinement</td></tr>
+            <tr><td><span class="k-badge">2</span></td><td>≤ 500</td><td>250,000</td><td style="font-size:12px;color:var(--text-muted)">Pairs; detects many non-isomorphic graphs</td></tr>
+            <tr><td><span class="k-badge">3</span></td><td>≤ 100</td><td>1,000,000</td><td style="font-size:12px;color:var(--text-muted)">Triples; handles CFI graphs &amp; more</td></tr>
+            <tr><td><span class="k-badge">4</span></td><td>≤ 30</td><td>810,000</td><td style="font-size:12px;color:var(--text-muted)">Very powerful; expensive</td></tr>
+            <tr><td><span class="k-badge">5</span></td><td>≤ 15</td><td>759,375</td><td style="font-size:12px;color:var(--text-muted)">Near-complete for most practical graphs</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="static-section anim-slide-up">
+        <h3>Try the Analyzer</h3>
+        <p>Head to the <a href="index.html" style="color:var(--accent-primary);font-weight:600">k-WL Analyzer</a> to upload your own graphs, choose a k value, and see the refinement process visualized step by step. Use <strong>Compare mode</strong> to run the isomorphism test on two graphs simultaneously.</p>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
